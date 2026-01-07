@@ -99,7 +99,7 @@ fn simulateRemoteInput(remote: *MockBackend, mgr: *RollbackManager) void {
         const msg = network.Message{ .input = .{
             .tick = mgr.current_tick + 2,
             .player_id = 1,
-            .input = Input.EMPTY,
+            .input = input_mod.EMPTY,
         } };
         remote.send(msg) catch {};
     }

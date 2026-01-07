@@ -29,7 +29,7 @@ pub const RollbackManager = struct {
     confirmed_inputs: [INPUT_BUFFER_SIZE][2]?Input = [_][2]?Input{.{ null, null }} ** INPUT_BUFFER_SIZE,
 
     /// Predicted inputs for remote player (when we haven't received them yet)
-    predicted_inputs: [INPUT_BUFFER_SIZE]Input = [_]Input{Input.EMPTY} ** INPUT_BUFFER_SIZE,
+    predicted_inputs: [INPUT_BUFFER_SIZE]Input = [_]Input{input_mod.EMPTY} ** INPUT_BUFFER_SIZE,
 
     /// Last confirmed tick for each player
     last_confirmed_tick: [2]u32 = .{ 0, 0 },
@@ -80,7 +80,7 @@ pub const RollbackManager = struct {
 
         // Check if this differs from our prediction
         const predicted = self.predicted_inputs[idx];
-        const needs_rollback = !predicted.eql(input) and tick <= self.current_tick;
+        const needs_rollback = !input_mod.eql(predicted, input) and tick <= self.current_tick;
 
         self.confirmed_inputs[idx][player_id] = input;
         self.last_confirmed_tick[player_id] = @max(self.last_confirmed_tick[player_id], tick);
@@ -107,7 +107,7 @@ pub const RollbackManager = struct {
     /// Get inputs for a tick, using prediction for unconfirmed remote inputs
     fn getInputsForTick(self: *RollbackManager, tick: u32) [2]Input {
         const idx = tick % INPUT_BUFFER_SIZE;
-        var inputs: [2]Input = .{ Input.EMPTY, Input.EMPTY };
+        var inputs: [2]Input = .{ input_mod.EMPTY, input_mod.EMPTY };
 
         for (0..2) |i| {
             if (self.confirmed_inputs[idx][i]) |confirmed| {
@@ -133,7 +133,7 @@ pub const RollbackManager = struct {
                 return inp;
             }
         }
-        return Input.EMPTY;
+        return input_mod.EMPTY;
     }
 
     /// Perform rollback and resimulation if needed
@@ -149,7 +149,7 @@ pub const RollbackManager = struct {
 
                 for (self.confirmed_inputs[idx]) |maybe_inp| {
                     if (maybe_inp) |inp| {
-                        if (!predicted.eql(inp)) {
+                        if (!input_mod.eql(predicted, inp)) {
                             if (rollback_to == null or confirmed_tick < rollback_to.?) {
                                 rollback_to = confirmed_tick;
                             }

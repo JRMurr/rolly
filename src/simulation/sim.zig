@@ -82,7 +82,7 @@ test "input affects state" {
 
     // Move right for a few ticks
     for (0..10) |_| {
-        step(&game, .{ .{ .right = true }, Input.EMPTY });
+        step(&game, .{ .{ .right = true }, input.EMPTY });
     }
 
     try std.testing.expect(game.players[0].x > start_x);
