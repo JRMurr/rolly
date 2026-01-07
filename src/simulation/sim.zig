@@ -4,12 +4,12 @@ const input = @import("input.zig");
 
 const GameState = state.GameState;
 const Player = state.Player;
+const Vec2 = state.Vec2;
 const Input = input.Input;
 
 const MOVE_SPEED: i32 = 5;
 const FRICTION: i32 = 1;
-const BOUNDS_X: i32 = 800;
-const BOUNDS_Y: i32 = 600;
+const BOUNDS: Vec2 = .{ .x = 1280, .y = 720 };
 const PLAYER_SIZE: i32 = 50;
 
 /// Pure, deterministic simulation step.
@@ -26,26 +26,25 @@ pub fn step(game: *GameState, inputs: [2]Input) void {
 
 fn updatePlayer(player: *Player, inp: Input) void {
     // Apply input to velocity
-    if (inp.left) player.vx -= MOVE_SPEED;
-    if (inp.right) player.vx += MOVE_SPEED;
-    if (inp.up) player.vy -= MOVE_SPEED;
-    if (inp.down) player.vy += MOVE_SPEED;
+    if (inp.left) player.vel.x -= MOVE_SPEED;
+    if (inp.right) player.vel.x += MOVE_SPEED;
+    if (inp.up) player.vel.y -= MOVE_SPEED;
+    if (inp.down) player.vel.y += MOVE_SPEED;
 
     // Apply friction
-    player.vx = applyFriction(player.vx);
-    player.vy = applyFriction(player.vy);
+    player.vel.x = applyFriction(player.vel.x);
+    player.vel.y = applyFriction(player.vel.y);
 
     // Clamp velocity
-    player.vx = std.math.clamp(player.vx, -20, 20);
-    player.vy = std.math.clamp(player.vy, -20, 20);
+    player.vel.x = std.math.clamp(player.vel.x, -20, 20);
+    player.vel.y = std.math.clamp(player.vel.y, -20, 20);
 
     // Update position
-    player.x += player.vx;
-    player.y += player.vy;
+    player.pos = Vec2.add(player.pos, player.vel);
 
     // Clamp to bounds
-    player.x = std.math.clamp(player.x, 0, BOUNDS_X - PLAYER_SIZE);
-    player.y = std.math.clamp(player.y, 0, BOUNDS_Y - PLAYER_SIZE);
+    player.pos.x = std.math.clamp(player.pos.x, 0, BOUNDS.x - PLAYER_SIZE);
+    player.pos.y = std.math.clamp(player.pos.y, 0, BOUNDS.y - PLAYER_SIZE);
 }
 
 fn applyFriction(vel: i32) i32 {
@@ -78,12 +77,12 @@ test "deterministic simulation" {
 
 test "input affects state" {
     var game = GameState.init();
-    const start_x = game.players[0].x;
+    const start_x = game.players[0].pos.x;
 
     // Move right for a few ticks
     for (0..10) |_| {
         step(&game, .{ .{ .right = true }, input.EMPTY });
     }
 
-    try std.testing.expect(game.players[0].x > start_x);
+    try std.testing.expect(game.players[0].pos.x > start_x);
 }

@@ -45,19 +45,21 @@ pub const Renderer = struct {
 
 fn drawPlayer(player: *const Player, color: rl.Color) void {
     rl.drawRectangle(
-        player.x,
-        player.y,
+        player.pos.x,
+        player.pos.y,
         PLAYER_SIZE,
         PLAYER_SIZE,
         color,
     );
 
     // Draw velocity indicator
+    const cx = player.pos.x + PLAYER_SIZE / 2;
+    const cy = player.pos.y + PLAYER_SIZE / 2;
     rl.drawLine(
-        player.x + PLAYER_SIZE / 2,
-        player.y + PLAYER_SIZE / 2,
-        player.x + PLAYER_SIZE / 2 + player.vx * 2,
-        player.y + PLAYER_SIZE / 2 + player.vy * 2,
+        cx,
+        cy,
+        cx + player.vel.x * 2,
+        cy + player.vel.y * 2,
         rl.Color.white,
     );
 }

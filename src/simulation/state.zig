@@ -3,18 +3,35 @@ const Input = @import("input.zig").Input;
 
 pub const MAX_PLAYERS = 2;
 
+pub const Vec2 = struct {
+    x: i32 = 0,
+    y: i32 = 0,
+
+    pub fn add(a: Vec2, b: Vec2) Vec2 {
+        return .{ .x = a.x + b.x, .y = a.y + b.y };
+    }
+
+    pub fn sub(a: Vec2, b: Vec2) Vec2 {
+        return .{ .x = a.x - b.x, .y = a.y - b.y };
+    }
+
+    pub fn scale(v: Vec2, s: i32) Vec2 {
+        return .{ .x = v.x * s, .y = v.y * s };
+    }
+
+    pub fn eql(a: Vec2, b: Vec2) bool {
+        return a.x == b.x and a.y == b.y;
+    }
+};
+
 pub const Player = struct {
-    x: i32,
-    y: i32,
-    vx: i32,
-    vy: i32,
+    pos: Vec2,
+    vel: Vec2,
 
     pub fn init(x: i32, y: i32) Player {
         return .{
-            .x = x,
-            .y = y,
-            .vx = 0,
-            .vy = 0,
+            .pos = .{ .x = x, .y = y },
+            .vel = .{},
         };
     }
 };
@@ -49,7 +66,7 @@ pub const GameState = struct {
     pub fn eql(self: GameState, other: GameState) bool {
         if (self.tick != other.tick) return false;
         for (self.players, other.players) |a, b| {
-            if (a.x != b.x or a.y != b.y or a.vx != b.vx or a.vy != b.vy) {
+            if (!a.pos.eql(b.pos) or !a.vel.eql(b.vel)) {
                 return false;
             }
         }
@@ -59,11 +76,20 @@ pub const GameState = struct {
 
 test "state snapshot and restore" {
     var state = GameState.init();
-    state.players[0].x = 100;
+    state.players[0].pos.x = 100;
 
     const snap = state.snapshot();
-    state.players[0].x = 999;
+    state.players[0].pos.x = 999;
 
     state.restore(snap);
-    try std.testing.expectEqual(@as(i32, 100), state.players[0].x);
+    try std.testing.expectEqual(@as(i32, 100), state.players[0].pos.x);
+}
+
+test "vec2 operations" {
+    const a = Vec2{ .x = 10, .y = 20 };
+    const b = Vec2{ .x = 3, .y = 4 };
+
+    try std.testing.expect(Vec2.add(a, b).eql(.{ .x = 13, .y = 24 }));
+    try std.testing.expect(Vec2.sub(a, b).eql(.{ .x = 7, .y = 16 }));
+    try std.testing.expect(Vec2.scale(b, 2).eql(.{ .x = 6, .y = 8 }));
 }
