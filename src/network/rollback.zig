@@ -12,6 +12,36 @@ const Input = input_mod.Input;
 const MAX_ROLLBACK_FRAMES = 8;
 const INPUT_BUFFER_SIZE = 128;
 
+/// Iterator that walks backwards through confirmed inputs for a player
+const ConfirmedInputIterator = struct {
+    inputs: *const [INPUT_BUFFER_SIZE][2]?Input,
+    player: u8,
+    remaining: u32,
+    current_tick: u32,
+
+    fn init(inputs: *const [INPUT_BUFFER_SIZE][2]?Input, player: u8, start_tick: u32) ConfirmedInputIterator {
+        return .{
+            .inputs = inputs,
+            .player = player,
+            .remaining = @min(start_tick + 1, INPUT_BUFFER_SIZE),
+            .current_tick = start_tick,
+        };
+    }
+
+    fn next(self: *ConfirmedInputIterator) ?Input {
+        while (self.remaining > 0) {
+            const idx = self.current_tick % INPUT_BUFFER_SIZE;
+            self.current_tick -%= 1; // wrapping subtract
+            self.remaining -= 1;
+
+            if (self.inputs[idx][self.player]) |inp| {
+                return inp;
+            }
+        }
+        return null;
+    }
+};
+
 /// Rollback netcode manager.
 /// Handles input delay, prediction, rollback, and resimulation.
 pub const RollbackManager = struct {
@@ -123,17 +153,10 @@ pub const RollbackManager = struct {
 
     /// Predict remote player's input (simple: repeat last known input)
     fn predictInput(self: *RollbackManager, player: u8, tick: u32) Input {
-        // Look backwards for last confirmed input
-        var t = tick;
-        while (t > 0) : (t -= 1) {
-            const idx = t % INPUT_BUFFER_SIZE;
-            if (self.confirmed_inputs[idx][player]) |inp| {
-                // Store prediction
-                self.predicted_inputs[tick % INPUT_BUFFER_SIZE] = inp;
-                return inp;
-            }
-        }
-        return input_mod.EMPTY;
+        var iter = ConfirmedInputIterator.init(&self.confirmed_inputs, player, tick);
+        const prediction = iter.next() orelse input_mod.EMPTY;
+        self.predicted_inputs[tick % INPUT_BUFFER_SIZE] = prediction;
+        return prediction;
     }
 
     /// Perform rollback and resimulation if needed
