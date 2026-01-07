@@ -4,8 +4,6 @@ const state = @import("../simulation/state.zig");
 const GameState = state.GameState;
 const Player = state.Player;
 
-const SCREEN_WIDTH = 800;
-const SCREEN_HEIGHT = 600;
 const PLAYER_SIZE = 50;
 
 const PLAYER_COLORS = [_]rl.Color{
@@ -68,9 +66,12 @@ fn drawHud(game: *const GameState) void {
     var buf: [64]u8 = undefined;
     const tick_text = std.fmt.bufPrintZ(&buf, "Tick: {d}", .{game.tick}) catch "Tick: ???";
 
-    rl.drawText(tick_text, 10, 10, 20, rl.Color.light_gray);
-    rl.drawText("Rolly - Rollback Netcode Demo", 10, 35, 16, rl.Color.gray);
-    rl.drawText("WASD to move | ESC to exit", 10, SCREEN_HEIGHT - 30, 16, rl.Color.gray);
+    const screen_height = rl.getScreenHeight();
+
+    // Use larger font sizes for crisp text at higher resolutions
+    rl.drawText(tick_text, 10, 10, 24, rl.Color.light_gray);
+    rl.drawText("Rolly - Rollback Netcode Demo", 10, 40, 20, rl.Color.gray);
+    rl.drawText("WASD to move | ESC to exit", 10, screen_height - 30, 20, rl.Color.gray);
 }
 
 const std = @import("std");

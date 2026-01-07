@@ -17,8 +17,8 @@ const Backend = network.Backend;
 const MockBackend = mock.MockBackend;
 const RollbackManager = rollback.RollbackManager;
 
-const SCREEN_WIDTH = 800;
-const SCREEN_HEIGHT = 600;
+const SCREEN_WIDTH = 1280;
+const SCREEN_HEIGHT = 720;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -114,7 +114,7 @@ fn drawNetStats(mgr: *RollbackManager) void {
         stats.behind,
     }) catch "Stats: ???";
 
-    rl.drawText(text, 10, 55, 16, rl.Color.yellow);
+    rl.drawText(text, 10, 68, 20, rl.Color.yellow);
 }
 
 // Re-export tests from submodules
